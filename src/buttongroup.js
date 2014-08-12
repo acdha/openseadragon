@@ -31,121 +31,113 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-(function( $ ){
-/**
- * @class ButtonGroup
- * @classdesc Manages events on groups of buttons.
- *
- * @memberof OpenSeadragon
- * @param {Object} options - A dictionary of settings applied against the entire group of buttons.
- * @param {Array} options.buttons Array of buttons
- * @param {Element} [options.element] Element to use as the container
- **/
-$.ButtonGroup = function( options ) {
-
-    $.extend( true, this, {
+(function ($) {
+    /**
+     * @class ButtonGroup
+     * @classdesc Manages events on groups of buttons.
+     *
+     * @memberof OpenSeadragon
+     * @param {Object} options - A dictionary of settings applied against the entire group of buttons.
+     * @param {Array} options.buttons Array of buttons
+     * @param {Element} [options.element] Element to use as the container
+     **/
+    $.ButtonGroup = function (options) {
+        $.extend(true, this, {
+            /**
+             * An array containing the buttons themselves.
+             * @member {Array} buttons
+             * @memberof OpenSeadragon.ButtonGroup#
+             */
+            buttons: [],
+            clickTimeThreshold: $.DEFAULT_SETTINGS.clickTimeThreshold,
+            clickDistThreshold: $.DEFAULT_SETTINGS.clickDistThreshold,
+            labelText: ""
+        }, options);
+        // copy the button elements  TODO: Why?
+        var buttons = this.buttons.concat([]),
+            _this = this,
+            i;
         /**
-         * An array containing the buttons themselves.
-         * @member {Array} buttons
+         * The shared container for the buttons.
+         * @member {Element} element
          * @memberof OpenSeadragon.ButtonGroup#
          */
-        buttons:            [],
-        clickTimeThreshold: $.DEFAULT_SETTINGS.clickTimeThreshold,
-        clickDistThreshold: $.DEFAULT_SETTINGS.clickDistThreshold,
-        labelText:          ""
-    }, options );
-
-    // copy the button elements  TODO: Why?
-    var buttons = this.buttons.concat([]),
-        _this = this,
-        i;
-
-    /**
-     * The shared container for the buttons.
-     * @member {Element} element
-     * @memberof OpenSeadragon.ButtonGroup#
-     */
-    this.element = options.element || $.makeNeutralElement( "div" );
-
-    // TODO What if there IS an options.group specified? 
-    if( !options.group ){
-        this.label   = $.makeNeutralElement( "label" );
-        //TODO: support labels for ButtonGroups
-        //this.label.innerHTML = this.labelText;
-        this.element.style.display = "inline-block";
-        this.element.appendChild( this.label );
-        for ( i = 0; i < buttons.length; i++ ) {
-            this.element.appendChild( buttons[ i ].element );
+        this.element = options.element || $.makeNeutralElement("div");
+        // TODO What if there IS an options.group specified? 
+        if (!options.group) {
+            this.label = $.makeNeutralElement("label");
+            //TODO: support labels for ButtonGroups
+            //this.label.innerHTML = this.labelText;
+            this.element.style.display = "inline-block";
+            this.element.appendChild(this.label);
+            for (i = 0; i < buttons.length; i++) {
+                this.element.appendChild(buttons[i].element);
+            }
         }
-    }
-
-    $.setElementTouchActionNone( this.element );
-
-    /**
-     * Tracks mouse/touch/key events accross the group of buttons.
-     * @member {OpenSeadragon.MouseTracker} tracker
-     * @memberof OpenSeadragon.ButtonGroup#
-     */
-    this.tracker = new $.MouseTracker({
-        element:            this.element,
-        clickTimeThreshold: this.clickTimeThreshold,
-        clickDistThreshold: this.clickDistThreshold,
-        enterHandler: function ( event ) {
-            var i;
-            for ( i = 0; i < _this.buttons.length; i++ ) {
-                _this.buttons[ i ].notifyGroupEnter();
-            }
-        },
-        exitHandler: function ( event ) {
-            var i;
-            if ( !event.insideElementPressed ) {
-                for ( i = 0; i < _this.buttons.length; i++ ) {
-                    _this.buttons[ i ].notifyGroupExit();
-                }
-            }
-        },
-        pressHandler: function ( event ) {
-            if ( event.pointerType === 'touch' && !$.MouseTracker.haveTouchEnter ) {
+        $.setElementTouchActionNone(this.element);
+        /**
+         * Tracks mouse/touch/key events accross the group of buttons.
+         * @member {OpenSeadragon.MouseTracker} tracker
+         * @memberof OpenSeadragon.ButtonGroup#
+         */
+        this.tracker = new $.MouseTracker({
+            element: this.element,
+            clickTimeThreshold: this.clickTimeThreshold,
+            clickDistThreshold: this.clickDistThreshold,
+            enterHandler: function (event) {
                 var i;
-                for ( i = 0; i < _this.buttons.length; i++ ) {
-                    _this.buttons[ i ].notifyGroupEnter();
+                for (i = 0; i < _this.buttons.length; i++) {
+                    _this.buttons[i].notifyGroupEnter();
+                }
+            },
+            exitHandler: function (event) {
+                var i;
+                if (!event.insideElementPressed) {
+                    for (i = 0; i < _this.buttons.length; i++) {
+                        _this.buttons[i].notifyGroupExit();
+                    }
+                }
+            },
+            pressHandler: function (event) {
+                if (event.pointerType === 'touch' && !$.MouseTracker.haveTouchEnter) {
+                    var i;
+                    for (i = 0; i < _this.buttons.length; i++) {
+                        _this.buttons[i].notifyGroupEnter();
+                    }
+                }
+            },
+            releaseHandler: function (event) {
+                var i;
+                if (!event.insideElementReleased || (event.pointerType === 'touch' && !$.MouseTracker.haveTouchEnter)) {
+                    for (i = 0; i < _this.buttons.length; i++) {
+                        _this.buttons[i].notifyGroupExit();
+                    }
                 }
             }
+        }).setTracking(true);
+    };
+    $.ButtonGroup.prototype = /** @lends OpenSeadragon.ButtonGroup.prototype */ {
+        /**
+         * TODO: Figure out why this is used on the public API and if a more useful
+         * api can be created.
+         * @function
+         * @private
+         */
+        emulateEnter: function () {
+            this.tracker.enterHandler({
+                eventSource: this.tracker
+            });
         },
-        releaseHandler: function ( event ) {
-            var i;
-            if ( !event.insideElementReleased || ( event.pointerType === 'touch' && !$.MouseTracker.haveTouchEnter ) ) {
-                for ( i = 0; i < _this.buttons.length; i++ ) {
-                    _this.buttons[ i ].notifyGroupExit();
-                }
-            }
+        /**
+         * TODO: Figure out why this is used on the public API and if a more useful
+         * api can be created.
+         * @function
+         * @private
+         */
+        emulateExit: function () {
+            this.tracker.exitHandler({
+                eventSource: this.tracker
+            });
         }
-    }).setTracking( true );
-};
-
-$.ButtonGroup.prototype = /** @lends OpenSeadragon.ButtonGroup.prototype */{
-
-    /**
-     * TODO: Figure out why this is used on the public API and if a more useful
-     * api can be created.
-     * @function
-     * @private
-     */
-    emulateEnter: function() {
-        this.tracker.enterHandler( { eventSource: this.tracker } );
-    },
-
-    /**
-     * TODO: Figure out why this is used on the public API and if a more useful
-     * api can be created.
-     * @function
-     * @private
-     */
-    emulateExit: function() {
-        this.tracker.exitHandler( { eventSource: this.tracker } );
-    }
-};
-
-
-}( OpenSeadragon ));
+    };
+}(OpenSeadragon));

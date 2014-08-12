@@ -31,141 +31,122 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-(function( $ ){
-
-/**
- * @class Spring
- * @memberof OpenSeadragon
- * @param {Object} options - Spring configuration settings.
- * @param {Number} options.initial - Initial value of spring, default to 0 so
- *  spring is not in motion initally by default.
- * @param {Number} options.springStiffness - Spring stiffness.
- * @param {Number} options.animationTime - Animation duration per spring.
- */
-$.Spring = function( options ) {
-    var args = arguments;
-
-    if( typeof( options ) != 'object' ){
-        //allows backward compatible use of ( initialValue, config ) as
-        //constructor parameters
-        options = {
-            initial: args.length && typeof ( args[ 0 ] ) == "number" ?
-                args[ 0 ] :
-                0,
-            /**
-             * Spring stiffness.
-             * @member {Number} springStiffness
-             * @memberof OpenSeadragon.Spring#
-             */
-            springStiffness: args.length > 1 ?
-                args[ 1 ].springStiffness :
-                5.0,
-            /**
-             * Animation duration per spring.
-             * @member {Number} animationTime
-             * @memberof OpenSeadragon.Spring#
-             */
-            animationTime: args.length > 1 ?
-                args[ 1 ].animationTime :
-                1.5
+(function ($) {
+    /**
+     * @class Spring
+     * @memberof OpenSeadragon
+     * @param {Object} options - Spring configuration settings.
+     * @param {Number} options.initial - Initial value of spring, default to 0 so
+     *  spring is not in motion initally by default.
+     * @param {Number} options.springStiffness - Spring stiffness.
+     * @param {Number} options.animationTime - Animation duration per spring.
+     */
+    $.Spring = function (options) {
+        var args = arguments;
+        if (typeof (options) != 'object') {
+            //allows backward compatible use of ( initialValue, config ) as
+            //constructor parameters
+            options = {
+                initial: args.length && typeof (args[0]) == "number" ?
+                    args[0] : 0,
+                /**
+                 * Spring stiffness.
+                 * @member {Number} springStiffness
+                 * @memberof OpenSeadragon.Spring#
+                 */
+                springStiffness: args.length > 1 ?
+                    args[1].springStiffness : 5.0,
+                /**
+                 * Animation duration per spring.
+                 * @member {Number} animationTime
+                 * @memberof OpenSeadragon.Spring#
+                 */
+                animationTime: args.length > 1 ?
+                    args[1].animationTime : 1.5
+            };
+        }
+        $.extend(true, this, options);
+        /**
+         * @member {Object} current
+         * @memberof OpenSeadragon.Spring#
+         * @property {Number} value
+         * @property {Number} time
+         */
+        this.current = {
+            value: typeof (this.initial) == "number" ?
+                this.initial : 0,
+            time: $.now() // always work in milliseconds
         };
-    }
-
-    $.extend( true, this, options);
-
-    /**
-     * @member {Object} current
-     * @memberof OpenSeadragon.Spring#
-     * @property {Number} value
-     * @property {Number} time
-     */
-    this.current = {
-        value: typeof ( this.initial ) == "number" ?
-            this.initial :
-            0,
-        time:  $.now() // always work in milliseconds
+        /**
+         * @member {Object} start
+         * @memberof OpenSeadragon.Spring#
+         * @property {Number} value
+         * @property {Number} time
+         */
+        this.start = {
+            value: this.current.value,
+            time: this.current.time
+        };
+        /**
+         * @member {Object} target
+         * @memberof OpenSeadragon.Spring#
+         * @property {Number} value
+         * @property {Number} time
+         */
+        this.target = {
+            value: this.current.value,
+            time: this.current.time
+        };
     };
-
-    /**
-     * @member {Object} start
-     * @memberof OpenSeadragon.Spring#
-     * @property {Number} value
-     * @property {Number} time
-     */
-    this.start = {
-        value: this.current.value,
-        time:  this.current.time
-    };
-
-    /**
-     * @member {Object} target
-     * @memberof OpenSeadragon.Spring#
-     * @property {Number} value
-     * @property {Number} time
-     */
-    this.target = {
-        value: this.current.value,
-        time:  this.current.time
-    };
-};
-
-$.Spring.prototype = /** @lends OpenSeadragon.Spring.prototype */{
-
-    /**
-     * @function
-     * @param {Number} target
-     */
-    resetTo: function( target ) {
-        this.target.value = target;
-        this.target.time  = this.current.time;
-        this.start.value  = this.target.value;
-        this.start.time   = this.target.time;
-    },
-
-    /**
-     * @function
-     * @param {Number} target
-     */
-    springTo: function( target ) {
-        this.start.value  = this.current.value;
-        this.start.time   = this.current.time;
-        this.target.value = target;
-        this.target.time  = this.start.time + 1000 * this.animationTime;
-    },
-
-    /**
-     * @function
-     * @param {Number} delta
-     */
-    shiftBy: function( delta ) {
-        this.start.value  += delta;
-        this.target.value += delta;
-    },
-
-    /**
-     * @function
-     */
-    update: function() {
-        this.current.time  = $.now();
-        this.current.value = (this.current.time >= this.target.time) ?
-            this.target.value :
-            this.start.value +
-                ( this.target.value - this.start.value ) *
+    $.Spring.prototype = /** @lends OpenSeadragon.Spring.prototype */ {
+        /**
+         * @function
+         * @param {Number} target
+         */
+        resetTo: function (target) {
+            this.target.value = target;
+            this.target.time = this.current.time;
+            this.start.value = this.target.value;
+            this.start.time = this.target.time;
+        },
+        /**
+         * @function
+         * @param {Number} target
+         */
+        springTo: function (target) {
+            this.start.value = this.current.value;
+            this.start.time = this.current.time;
+            this.target.value = target;
+            this.target.time = this.start.time + 1000 * this.animationTime;
+        },
+        /**
+         * @function
+         * @param {Number} delta
+         */
+        shiftBy: function (delta) {
+            this.start.value += delta;
+            this.target.value += delta;
+        },
+        /**
+         * @function
+         */
+        update: function () {
+            this.current.time = $.now();
+            this.current.value = (this.current.time >= this.target.time) ?
+                this.target.value :
+                this.start.value +
+                (this.target.value - this.start.value) *
                 transform(
-                    this.springStiffness,
-                    ( this.current.time - this.start.time ) /
-                    ( this.target.time  - this.start.time )
-                );
+                    this.springStiffness, (this.current.time - this.start.time) /
+                    (this.target.time - this.start.time)
+            );
+        }
+    };
+    /**
+     * @private
+     */
+    function transform(stiffness, x) {
+        return (1.0 - Math.exp(stiffness * -x)) /
+            (1.0 - Math.exp(-stiffness));
     }
-};
-
-/**
- * @private
- */
-function transform( stiffness, x ) {
-    return ( 1.0 - Math.exp( stiffness * -x ) ) /
-        ( 1.0 - Math.exp( -stiffness ) );
-}
-
-}( OpenSeadragon ));
+}(OpenSeadragon));

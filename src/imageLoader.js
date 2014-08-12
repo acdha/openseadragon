@@ -31,144 +31,115 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-(function( $ ){
-
-/**
- * @private
- * @class ImageJob
- * @classdesc Handles loading a single image for use in a single {@link OpenSeadragon.Tile}.
- *
- * @memberof OpenSeadragon
- * @param {String} source - URL of image to download.
- * @param {String} crossOriginPolicy - CORS policy to use for downloads
- * @param {Function} callback - Called once image has finished downloading.
- */
-function ImageJob ( options ) {
-    
-    $.extend( true, this, {
-        timeout:        $.DEFAULT_SETTINGS.timeout,
-        jobId:          null
-    }, options );
-    
+(function ($) {
     /**
-     * Image object which will contain downloaded image.
-     * @member {Image} image
-     * @memberof OpenSeadragon.ImageJob#
-     */
-    this.image = null;
-}
-
-ImageJob.prototype = {
-
-    /**
-     * Initiates downloading of associated image.
-     * @method
-     */
-    start: function(){
-        var _this = this;
-
-        this.image = new Image();
-
-        if ( this.crossOriginPolicy !== false ) {
-            this.image.crossOrigin = this.crossOriginPolicy;
-        }
-
-        this.image.onload = function(){
-            _this.finish( true );
-        };
-        this.image.onabort = this.image.onerror = function(){
-            _this.finish( false );
-        };
-
-        this.jobId = window.setTimeout( function(){
-            _this.finish( false );
-        }, this.timeout);
-
-        this.image.src = this.src;
-    },
-
-    finish: function( successful ) {
-        this.image.onload = this.image.onerror = this.image.onabort = null;
-        if (!successful) {
-            this.image = null;
-        }
-
-        if ( this.jobId ) {
-            window.clearTimeout( this.jobId );
-        }
-
-        this.callback( this );
-    }
-
-};
-
-/**
- * @class
- * @classdesc Handles downloading of a set of images using asynchronous queue pattern.
- */
-$.ImageLoader = function() {
-    
-    $.extend( true, this, {
-        jobLimit:       $.DEFAULT_SETTINGS.imageLoaderLimit,
-        jobQueue:       [],
-        jobsInProgress: 0
-    });
-
-};
-
-$.ImageLoader.prototype = {
-    
-    /**
-     * Add an unloaded image to the loader queue.
-     * @method
-     * @param {String} src - URL of image to download.
+     * @private
+     * @class ImageJob
+     * @classdesc Handles loading a single image for use in a single {@link OpenSeadragon.Tile}.
+     *
+     * @memberof OpenSeadragon
+     * @param {String} source - URL of image to download.
      * @param {String} crossOriginPolicy - CORS policy to use for downloads
-     * @param {Function} callback - Called once image has been downloaded.
+     * @param {Function} callback - Called once image has finished downloading.
      */
-    addJob: function( options ) {
-        var _this = this,
-            complete = function( job ) {
-                completeJob( _this, job, options.callback );
-            },
-            jobOptions = {
-                src: options.src,
-                crossOriginPolicy: options.crossOriginPolicy,
-                callback: complete
-            },
-            newJob = new ImageJob( jobOptions );
-
-        if ( !this.jobLimit || this.jobsInProgress < this.jobLimit ) {
-            newJob.start();
-            this.jobsInProgress++;
-        }
-        else {
-           this.jobQueue.push( newJob );
-        }
-
+    function ImageJob(options) {
+        $.extend(true, this, {
+            timeout: $.DEFAULT_SETTINGS.timeout,
+            jobId: null
+        }, options);
+        /**
+         * Image object which will contain downloaded image.
+         * @member {Image} image
+         * @memberof OpenSeadragon.ImageJob#
+         */
+        this.image = null;
     }
-};
-
-/**
- * Cleans up ImageJob once completed.
- * @method
- * @private
- * @param loader - ImageLoader used to start job.
- * @param job - The ImageJob that has completed.
- * @param callback - Called once cleanup is finished.
- */
-function completeJob( loader, job, callback ) {
-    var nextJob;
-
-    loader.jobsInProgress--;
-
-    if ( (!loader.jobLimit || loader.jobsInProgress < loader.jobLimit) && loader.jobQueue.length > 0) {
-        nextJob = loader.jobQueue.shift();
-        nextJob.start();
+    ImageJob.prototype = {
+        /**
+         * Initiates downloading of associated image.
+         * @method
+         */
+        start: function () {
+            var _this = this;
+            this.image = new Image();
+            if (this.crossOriginPolicy !== false) {
+                this.image.crossOrigin = this.crossOriginPolicy;
+            }
+            this.image.onload = function () {
+                _this.finish(true);
+            };
+            this.image.onabort = this.image.onerror = function () {
+                _this.finish(false);
+            };
+            this.jobId = window.setTimeout(function () {
+                _this.finish(false);
+            }, this.timeout);
+            this.image.src = this.src;
+        },
+        finish: function (successful) {
+            this.image.onload = this.image.onerror = this.image.onabort = null;
+            if (!successful) {
+                this.image = null;
+            }
+            if (this.jobId) {
+                window.clearTimeout(this.jobId);
+            }
+            this.callback(this);
+        }
+    };
+    /**
+     * @class
+     * @classdesc Handles downloading of a set of images using asynchronous queue pattern.
+     */
+    $.ImageLoader = function () {
+        $.extend(true, this, {
+            jobLimit: $.DEFAULT_SETTINGS.imageLoaderLimit,
+            jobQueue: [],
+            jobsInProgress: 0
+        });
+    };
+    $.ImageLoader.prototype = {
+        /**
+         * Add an unloaded image to the loader queue.
+         * @method
+         * @param {String} src - URL of image to download.
+         * @param {String} crossOriginPolicy - CORS policy to use for downloads
+         * @param {Function} callback - Called once image has been downloaded.
+         */
+        addJob: function (options) {
+            var _this = this,
+                complete = function (job) {
+                    completeJob(_this, job, options.callback);
+                },
+                jobOptions = {
+                    src: options.src,
+                    crossOriginPolicy: options.crossOriginPolicy,
+                    callback: complete
+                },
+                newJob = new ImageJob(jobOptions);
+            if (!this.jobLimit || this.jobsInProgress < this.jobLimit) {
+                newJob.start();
+                this.jobsInProgress++;
+            } else {
+                this.jobQueue.push(newJob);
+            }
+        }
+    };
+    /**
+     * Cleans up ImageJob once completed.
+     * @method
+     * @private
+     * @param loader - ImageLoader used to start job.
+     * @param job - The ImageJob that has completed.
+     * @param callback - Called once cleanup is finished.
+     */
+    function completeJob(loader, job, callback) {
+        var nextJob;
+        loader.jobsInProgress--;
+        if ((!loader.jobLimit || loader.jobsInProgress < loader.jobLimit) && loader.jobQueue.length > 0) {
+            nextJob = loader.jobQueue.shift();
+            nextJob.start();
+        }
+        callback(job.image);
     }
-
-    callback( job.image );
-}
-
-}( OpenSeadragon ));
-
+}(OpenSeadragon));

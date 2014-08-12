@@ -7,6 +7,7 @@
     "trailing": true,
     "undef": true,
     "unused": false,
+    "indent": 4,
 
     "globals": {
         "OpenSeadragon": true
